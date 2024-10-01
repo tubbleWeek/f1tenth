@@ -38,7 +38,7 @@ class GapFollowerController(Node):
             qos_profile_sensor_data
         )
 
-        self.ackermann_publisher = self.create_publisher(AckermannDriveStamped, '/drive', qos_profile_sensor_data);
+        self.ackermann_publisher = self.create_publisher(AckermannDriveStamped, '/drive', qos_profile_sensor_data)
 
 
         # Using /drive topic for f1tenth
@@ -124,7 +124,8 @@ class GapFollowerController(Node):
         throttle_cmd = throttle_cmd_value
         #self.throttle_publisher.publish(throttle_cmd)
 
-        drive = AckermannDrive(steering_angle = steering_cmd, speed = throttle_cmd);
+        # Publishing the commands to the drive topic
+        drive = AckermannDrive(steering_angle = steering_cmd, speed = throttle_cmd)
         data = AckermannDriveStamped(header = std_msgs.msg.Header(), drive = drive)
         self.ackermann_publisher.publish(data)
         #self.get_logger().info(f'Published throttle command: {throttle_cmd_value:.2f}')
@@ -166,6 +167,10 @@ class GapFollowerController(Node):
 
         # Ensure throttle is within bounds
         throttle_cmd = max(min(throttle_cmd, max_throttle), min_throttle)
+
+        # Added calculation of the speed in m/s that we want the f1tenth to drive at instead of the throttle percentage.
+        throttle_cmd = self.target_speed * throttle_cmd
+
         return throttle_cmd
 
     def calculate_steering(self, target_steering_angle):
@@ -176,7 +181,8 @@ class GapFollowerController(Node):
         # steering_cmd = max(min(target_steering_angle, self.max_steering_angle), -self.max_steering_angle)
         # return steering_cmd
         target_steering_cmd = max(min(target_steering_angle, 0.5236), -0.5236)
-        steering_cmd = target_steering_cmd / 0.5236 # get percentage, based on [-0.5236,0.5236] rad
+        # edited so no longer returns the percentage and instead the turning command in radians
+        steering_cmd = target_steering_cmd #/ 0.5236 # get percentage, based on [-0.5236,0.5236] rad
         steering_cmd *= 0.7 # a scaling factor to limit the turning rate
         return steering_cmd
 
